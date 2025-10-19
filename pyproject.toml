@@ -1,0 +1,21 @@
+[project]
+name = "custard-dlt"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "dlt[duckdb]>=0.4.0",
+    "sqlalchemy>=2.0.44",
+    "sshtunnel>=0.4.0",
+    "paramiko<4.0.0",
+    "psycopg2-binary>=2.9.0",
+    "pydantic>=2.12.3",
+    "recurring-ical-events>=3.8.0",
+    "icalendar>=6.3.1",
+    "prefect>=3.4.24",
+    "prefect-gcp",
+]
+
+[tool.setuptools]
+py-modules = ["main", "sql_database_pipeline", "get_events_between", "test_ical"]

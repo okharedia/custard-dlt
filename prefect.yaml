@@ -1,0 +1,26 @@
+name: custard-dlt
+requires:
+  - prefect-gcp
+
+deployments:
+  - name: main
+    entrypoint: flows/replicate_postgres_to_duckdb.py:replicate_postgres_to_duckdb
+    work_pool:
+      name: work-pool-1
+      job_variables:
+        env:
+          SSH__USERNAME: "{{ prefect.blocks.secret.ssh-username }}"
+          SSH__HOST: "{{ prefect.blocks.secret.ssh-host }}"
+          SSH__PRIVATE_KEY: "{{ prefect.blocks.secret.ssh-private-key }}"
+          SOURCES__SQL_DATABASE__CREDENTIALS__USERNAME: "{{ prefect.blocks.secret.db-username }}"
+          SOURCES__SQL_DATABASE__CREDENTIALS__PASSWORD: "{{ prefect.blocks.secret.db-password }}"
+    schedule: null  
+
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/okharedia/custard-dlt.git
+          credentials: "{{ prefect.blocks.github-credentials.credentials-1 }}"
+      - prefect.deployments.steps.pip_install_requirements:
+          directory: "{{ clone-step.directory }}"
+          requirements_file: requirements.txt
