@@ -14,7 +14,8 @@ deployments:
           SSH__PRIVATE_KEY: "{{ prefect.blocks.secret.ssh-private-key }}"
           SOURCES__SQL_DATABASE__CREDENTIALS__USERNAME: "{{ prefect.blocks.secret.db-username }}"
           SOURCES__SQL_DATABASE__CREDENTIALS__PASSWORD: "{{ prefect.blocks.secret.db-password }}"
-    schedule: null  
+    schedule:
+      cron: "0 5 * * *"
 
     pull:
       - prefect.deployments.steps.git_clone:

@@ -4,12 +4,10 @@ from sshtunnel import SSHTunnelForwarder
 from dlt.sources.sql_database import sql_database
 from sqlalchemy import create_engine
 import sqlalchemy as sa
-import uuid
 from datetime import datetime, timedelta, timezone
 from get_events_between import get_events_between
 from prefect import flow, task, get_run_logger
 from prefect.cache_policies import NO_CACHE
-from prefect.server.schemas.schedules import CronSchedule
 import io
 from paramiko import RSAKey, Ed25519Key, ECDSAKey, DSSKey
 
@@ -45,7 +43,7 @@ def schedule_agreements(schedules_items):
             }
 
 
-@task
+@task(retries=1, retry_delay_seconds=1)
 def build_dlt_resources(connection_string):
     logger = get_run_logger()
     engine = create_engine(connection_string)
@@ -91,15 +89,16 @@ def build_dlt_resources(connection_string):
             
             query = f"SELECT {', '.join(select_parts)} FROM {table_name}"
 
-            def _execute_query(q=query, conn_str=connection_string):
-                engine = create_engine(conn_str)
-                with engine.connect() as connection:
-                    result = connection.execute(sa.text(q))
-                    for row in result.mappings():
-                        yield dict(row)
+            def create_query_executor(q, eng):
+                def _execute_query():
+                    with eng.connect() as connection:
+                        result = connection.execute(sa.text(q))
+                        for row in result.mappings():
+                            yield dict(row)
+                return _execute_query
 
             custom_resource = dlt.resource(
-                _execute_query,
+                create_query_executor(query, engine),
                 name=table_name,
                 write_disposition="merge",
                 primary_key=pk_columns if pk_columns else None
@@ -109,7 +108,7 @@ def build_dlt_resources(connection_string):
     return all_resources
 
 
-@task(cache_policy=NO_CACHE)
+@task(cache_policy=NO_CACHE, retries=1, retry_delay_seconds=1)
 def run_dlt_pipeline(resources):
     logger = get_run_logger()
     pipeline = dlt.pipeline(
@@ -125,39 +124,64 @@ def run_dlt_pipeline(resources):
     return load_info
 
 
-@flow(name="replicate-postgres-to-duckdb", log_prints=True)
-def replicate_postgres_to_duckdb():
+@task(cache_policy=NO_CACHE)
+def get_pkey_from_string(private_key_string: str):
+    """Loads a private key from a string."""
+    if not private_key_string:
+        return None
+    key_classes = [RSAKey, Ed25519Key, ECDSAKey, DSSKey]
+    for key_class in key_classes:
+        try:
+            return key_class.from_private_key(io.StringIO(private_key_string))
+        except Exception:
+            continue
+    return None
+
+@task(retries=1, retry_delay_seconds=1, cache_policy=NO_CACHE)
+def create_ssh_tunnel(ssh_host, ssh_port, ssh_username, pkey, remote_db_host, remote_db_port):
+    """Establishes an SSH tunnel and returns the tunnel object."""
+    tunnel = SSHTunnelForwarder(
+        (ssh_host, int(ssh_port)),
+        ssh_username=ssh_username,
+        ssh_pkey=pkey,
+        remote_bind_address=(remote_db_host, remote_db_port),
+    )
+    tunnel.start()
+    get_run_logger().info("SSH tunnel started.")
+    return tunnel
+
+
+@flow(name="replicate-postgres-to-duckdb", log_prints=True, version="1.0.0")
+def replicate_postgres_to_duckdb(
+    remote_db_host: str = "127.0.0.1",
+    remote_db_port: int = 5433,
+    ssh_port: int = 22,
+    db_name: str = "postgres"
+):
     logger = get_run_logger()
     
-    remote_db_host = "127.0.0.1"
-    remote_db_port = 5433
-    ssh_port = 22
     db_username = dlt.secrets["sources.sql_database.credentials.username"]
     db_password = dlt.secrets["sources.sql_database.credentials.password"]
     ssh_username = dlt.secrets["ssh.username"]
     ssh_host = dlt.secrets["ssh.host"]
     private_key = dlt.secrets["ssh.private_key"]
-    pkey = None
-    if private_key:
-        key_classes = [RSAKey, Ed25519Key, ECDSAKey, DSSKey]
-        for key_class in key_classes:
-            try:
-                pkey = key_class.from_private_key(io.StringIO(private_key))
-                break
-            except Exception:
-                continue
+    
+    pkey = get_pkey_from_string(private_key)
 
-    with SSHTunnelForwarder(
-        (ssh_host, int(ssh_port)),
-        ssh_username=ssh_username,
-        ssh_pkey=pkey,
-        remote_bind_address=(remote_db_host, remote_db_port),
-    ) as tunnel:
-        logger.info("Tunnel started")
-        connection_string = f"postgresql://{db_username}:{db_password}@{tunnel.local_bind_host}:{tunnel.local_bind_port}/postgres"
+    tunnel = None
+    try:
+        tunnel = create_ssh_tunnel(
+            ssh_host, ssh_port, ssh_username, pkey, remote_db_host, remote_db_port
+        )
+        
+        connection_string = f"postgresql://{db_username}:{db_password}@{tunnel.local_bind_host}:{tunnel.local_bind_port}/{db_name}"
         
         resources = build_dlt_resources(connection_string)
         run_dlt_pipeline(resources)
         logger.info("DLT pipeline finished")
+    finally:
+        if tunnel:
+            tunnel.stop()
+            logger.info("SSH tunnel stopped.")
 
     logger.info("ETL finished successfully!")
