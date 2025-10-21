@@ -251,6 +251,8 @@ protobuf==6.33.0
     #   proto-plus
 psycopg2-binary==2.9.11
     # via custard-dlt (pyproject.toml)
+pyarrow==21.0.0
+    # via dlt
 pyasn1==0.6.1
     # via
     #   pyasn1-modules

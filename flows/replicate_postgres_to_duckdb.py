@@ -113,8 +113,8 @@ def run_dlt_pipeline(resources):
     logger = get_run_logger()
     pipeline = dlt.pipeline(
         pipeline_name="custard",
-        destination="duckdb",
-        dataset_name="raw"
+        destination="motherduck",
+        dataset_name="raw_postgres"
     )
     load_info = pipeline.run(resources)
     logger.info("All tables loaded.")

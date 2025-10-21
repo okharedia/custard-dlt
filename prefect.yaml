@@ -14,6 +14,8 @@ deployments:
           SSH__PRIVATE_KEY: "{{ prefect.blocks.secret.ssh-private-key }}"
           SOURCES__SQL_DATABASE__CREDENTIALS__USERNAME: "{{ prefect.blocks.secret.db-username }}"
           SOURCES__SQL_DATABASE__CREDENTIALS__PASSWORD: "{{ prefect.blocks.secret.db-password }}"
+          DESTINATION__MOTHERDUCK__CREDENTIALS__PASSWORD: "{{ prefect.blocks.secret.md-credentials }}"
+          DESTINATION__MOTHERDUCK__CREDENTIALS__DATABASE: "custard"
     schedule:
       cron: "0 5 * * *"
 
