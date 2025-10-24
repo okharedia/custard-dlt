@@ -15,7 +15,7 @@ def run_dlt_pipeline(connection_string):
 
     pipeline = dlt.pipeline(
         pipeline_name="custard",
-        destination="duckdb",
+        destination="motherduck",
         dataset_name="main"
     )
     

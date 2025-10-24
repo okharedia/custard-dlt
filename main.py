@@ -1,4 +1,4 @@
-from flows.replicate_postgres_to_duckdb import replicate_postgres_to_duckdb
+from flows.replicate_postgres_raw import replicate_postgres_raw
 
 if __name__ == "__main__":
-    replicate_postgres_to_duckdb()
+    replicate_postgres_raw()

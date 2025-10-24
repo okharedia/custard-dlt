@@ -11,7 +11,11 @@ from prefect import flow, task, get_run_logger
 from get_events_between import get_events_between
 
 
-@dlt.resource(name="raw_schedule_agreements", write_disposition="replace")
+@dlt.resource(
+    name="raw_schedule_agreements", 
+    write_disposition="merge",
+    primary_key=["schedule_id", "start_at", "end_at"]
+)
 def schedule_agreements(schedules_items):
     """
     For each calendar in the schedules table, this resource generates schedule agreements for the next 10 years.
@@ -49,7 +53,7 @@ def run_dlt_pipeline(connection_string):
 
     pipeline = dlt.pipeline(
         pipeline_name="custard",
-        destination="duckdb",
+        destination="motherduck",
         dataset_name="main"
     )
     load_info = pipeline.run([agreements_resource])
