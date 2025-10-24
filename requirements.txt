@@ -198,6 +198,8 @@ markupsafe==3.0.3
     #   mako
 mdurl==0.1.2
     # via markdown-it-py
+numpy==2.3.4
+    # via pandas
 oauthlib==3.3.1
     # via requests-oauthlib
 opentelemetry-api==1.38.0
@@ -211,6 +213,8 @@ packaging==25.0
     #   dlt
     #   prefect
     #   requirements-parser
+pandas==2.3.3
+    # via custard-dlt (pyproject.toml)
 paramiko==3.5.1
     # via
     #   custard-dlt (pyproject.toml)
@@ -286,6 +290,7 @@ python-dateutil==2.9.0.post0
     # via
     #   dateparser
     #   icalendar
+    #   pandas
     #   pendulum
     #   prefect
     #   recurring-ical-events
@@ -299,6 +304,7 @@ pytz==2025.2
     # via
     #   dateparser
     #   dlt
+    #   pandas
     #   prefect
 pyyaml==6.0.3
     # via
@@ -417,6 +423,7 @@ tzdata==2025.2
     # via
     #   dlt
     #   icalendar
+    #   pandas
     #   pendulum
     #   recurring-ical-events
     #   x-wr-timezone
