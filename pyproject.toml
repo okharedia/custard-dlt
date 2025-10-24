@@ -15,6 +15,7 @@ dependencies = [
     "icalendar>=6.3.1",
     "prefect>=3.4.24",
     "prefect-gcp",
+    "pandas>=2.3.3",
 ]
 
 [tool.setuptools]
