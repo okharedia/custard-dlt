@@ -4,7 +4,7 @@ requires:
 
 deployments:
   - name: main
-    entrypoint: flows/replicate_postgres_to_duckdb.py:replicate_postgres_to_duckdb
+    entrypoint: flows/replicate_postgres_raw.py:replicate_postgres_raw
     work_pool:
       name: work-pool-1
       job_variables:
