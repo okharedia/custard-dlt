@@ -3,7 +3,7 @@ requires:
   - prefect-gcp
 
 deployments:
-  - name: main
+  - name: generate_schedule_agreements
     entrypoint: flows/generate_schedule_agreements.py:generate_schedule_agreements
     work_pool:
       name: work-pool-1
@@ -14,8 +14,6 @@ deployments:
           DESTINATION__BIGQUERY__CREDENTIALS__PRIVATE_KEY: "{{ prefect.blocks.secret.bq-private-key }}"
           DESTINATION__BIGQUERY__CREDENTIALS__CLIENT_EMAIL: "{{ prefect.blocks.secret.bq-client-email }}"
           DESTINATION__DATASET: "public"
-    schedule:
-      cron: "0 5 * * *"
 
     pull:
       - prefect.deployments.steps.git_clone:
