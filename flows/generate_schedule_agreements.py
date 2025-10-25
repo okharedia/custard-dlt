@@ -1,12 +1,9 @@
 import dlt
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from dlt.sources.sql_database import sql_database
-from prefect.cache_policies import INPUTS
-from prefect import flow, task, get_run_logger
-from google.oauth2 import service_account
+from prefect import flow, get_run_logger
 
 from get_events_between import get_events_between
 
@@ -44,20 +41,18 @@ def schedule_agreements(schedules_items):
                 "end_at": event.end,
                 "schedule_id": schedule_id,
             }
-@task(cache_policy=INPUTS, retries=1, retry_delay_seconds=1)
-def run_dlt_pipeline(project_id: str, dataset: str):
-    logger = get_run_logger()
 
-    # Create Google Cloud credentials from dlt secrets
-    credentials_info = {
-        "type": "service_account",
-        "project_id": project_id,
-        "private_key": dlt.secrets["destination.bigquery.credentials.private_key"],
-        "client_email": dlt.secrets["destination.bigquery.credentials.client_email"],
-        "token_uri": "https://oauth2.googleapis.com/token",
-    }
+
+@flow(name="generate-schedule-agreements", log_prints=True, version="1.0.0")
+def generate_schedule_agreements(
     
-    credentials = service_account.Credentials.from_service_account_info(credentials_info)
+):
+    logger = get_run_logger()
+    
+    project_id = dlt.secrets["destination.bigquery.credentials.project_id"]
+    dataset = dlt.config["destination.dataset"]
+
+    logger.info(f"Reading from BigQuery project: {project_id}, dataset: {dataset}")
     
     # Create BigQuery connection string for sql_database source
     connection_string = f"bigquery://{project_id}/{dataset}"
@@ -66,7 +61,6 @@ def run_dlt_pipeline(project_id: str, dataset: str):
     source = sql_database(
         connection_string,
         schema=dataset,
-        credentials=credentials
     ).with_resources("schedules")
     agreements_resource = schedule_agreements(source)
 
@@ -76,27 +70,12 @@ def run_dlt_pipeline(project_id: str, dataset: str):
         dataset_name=dataset
     )
     load_info = pipeline.run([agreements_resource])
+
     logger.info("Schedule agreements loaded.")
     logger.info(load_info)
     logger.info(pipeline.last_trace.last_normalize_info)
     logger.info(f"Pipeline finished in {pipeline.last_trace.finished_at - pipeline.last_trace.started_at}")
-    return load_info
-
-
-@flow(name="generate-schedule-agreements", log_prints=True, version="1.0.0")
-def generate_schedule_agreements(
-    project_id: Optional[str] = None,
-    dataset: str = dlt.config["destination.dataset"]
-):
-    logger = get_run_logger()
     
-    # Get project_id from secrets if not provided
-    if not project_id:
-        project_id = dlt.secrets["destination.bigquery.credentials.project_id"]
-    
-    logger.info(f"Reading from BigQuery project: {project_id}, dataset: {dataset}")
-    
-    run_dlt_pipeline(project_id, dataset)
     logger.info("DLT pipeline finished")
     logger.info("ETL finished successfully!")
 
