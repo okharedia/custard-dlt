@@ -1,18 +1,17 @@
 import dlt
 
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 from dlt.sources.sql_database import sql_database
 from prefect.cache_policies import INPUTS
-from flows.utils.pkey import get_pkey_from_string
-from flows.utils.ssh_tunnel import create_ssh_tunnel
 from prefect import flow, task, get_run_logger
 
 from get_events_between import get_events_between
 
 
 @dlt.resource(
-    name="raw_schedule_agreements", 
+    name="schedule_agreements", 
     write_disposition="merge",
     primary_key=["schedule_id", "start_at", "end_at"]
 )
@@ -45,16 +44,22 @@ def schedule_agreements(schedules_items):
                 "schedule_id": schedule_id,
             }
 @task(cache_policy=INPUTS, retries=1, retry_delay_seconds=1)
-def run_dlt_pipeline(connection_string):
+def run_dlt_pipeline(project_id: str, dataset: str):
     logger = get_run_logger()
 
-    source = sql_database(connection_string).with_resources("schedules")
+    # Create BigQuery connection string for sql_database source
+    connection_string = f"bigquery://{project_id}/{dataset}"
+    
+    source = sql_database(
+        connection_string,
+        schema=dataset
+    ).with_resources("schedules")
     agreements_resource = schedule_agreements(source)
 
     pipeline = dlt.pipeline(
         pipeline_name="custard",
         destination="bigquery",
-        dataset_name="main"
+        dataset_name=dataset
     )
     load_info = pipeline.run([agreements_resource])
     logger.info("Schedule agreements loaded.")
@@ -66,36 +71,19 @@ def run_dlt_pipeline(connection_string):
 
 @flow(name="generate-schedule-agreements", log_prints=True, version="1.0.0")
 def generate_schedule_agreements(
-    remote_db_host: str = "127.0.0.1",
-    remote_db_port: int = 5433,
-    ssh_port: int = 22,
-    db_name: str = "postgres"
+    project_id: Optional[str] = None,
+    dataset: str = dlt.config["destination.dataset"]
 ):
     logger = get_run_logger()
     
-    db_username = dlt.secrets["sources.sql_database.credentials.username"]
-    db_password = dlt.secrets["sources.sql_database.credentials.password"]
-    ssh_username = dlt.secrets["ssh.username"]
-    ssh_host = dlt.secrets["ssh.host"]
-    private_key = dlt.secrets["ssh.private_key"]
+    # Get project_id from secrets if not provided
+    if not project_id:
+        project_id = dlt.secrets["destination.bigquery.credentials.project_id"]
     
-    pkey = get_pkey_from_string(private_key)
-
-    tunnel = None
-    try:
-        tunnel = create_ssh_tunnel(
-            ssh_host, ssh_port, ssh_username, pkey, remote_db_host, remote_db_port
-        )
-        
-        connection_string = f"postgresql://{db_username}:{db_password}@{tunnel.local_bind_host}:{tunnel.local_bind_port}/{db_name}"
-        
-        run_dlt_pipeline(connection_string)
-        logger.info("DLT pipeline finished")
-    finally:
-        if tunnel:
-            tunnel.stop()
-            logger.info("SSH tunnel stopped.")
-
+    logger.info(f"Reading from BigQuery project: {project_id}, dataset: {dataset}")
+    
+    run_dlt_pipeline(project_id, dataset)
+    logger.info("DLT pipeline finished")
     logger.info("ETL finished successfully!")
 
 

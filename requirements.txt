@@ -104,6 +104,7 @@ google-api-core==2.26.0
     #   google-cloud-core
     #   google-cloud-secret-manager
     #   google-cloud-storage
+    #   sqlalchemy-bigquery
 google-api-python-client==2.185.0
     # via prefect-gcp
 google-auth==2.41.1
@@ -117,12 +118,15 @@ google-auth==2.41.1
     #   google-cloud-core
     #   google-cloud-secret-manager
     #   google-cloud-storage
+    #   sqlalchemy-bigquery
 google-auth-httplib2==0.2.0
     # via google-api-python-client
 google-auth-oauthlib==1.2.2
     # via gcsfs
 google-cloud-bigquery==3.38.0
-    # via dlt
+    # via
+    #   dlt
+    #   sqlalchemy-bigquery
 google-cloud-core==2.4.3
     # via
     #   google-cloud-bigquery
@@ -255,6 +259,7 @@ packaging==25.0
     #   google-cloud-bigquery
     #   prefect
     #   requirements-parser
+    #   sqlalchemy-bigquery
 pandas==2.3.3
     # via
     #   custard-dlt (pyproject.toml)
@@ -433,6 +438,9 @@ sqlalchemy==2.0.44
     #   custard-dlt (pyproject.toml)
     #   alembic
     #   prefect
+    #   sqlalchemy-bigquery
+sqlalchemy-bigquery==1.15.0
+    # via custard-dlt (pyproject.toml)
 sqlglot==27.27.0
     # via dlt
 sshtunnel==0.4.0

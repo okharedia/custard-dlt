@@ -4,19 +4,12 @@ requires:
 
 deployments:
   - name: main
-    entrypoint: flows/replicate_postgres_raw.py:replicate_postgres_raw
+    entrypoint: flows/generate_schedule_agreements.py:generate_schedule_agreements
     work_pool:
       name: work-pool-1
       job_variables:
         env:
-          SSH__USERNAME: "{{ prefect.blocks.secret.ssh-username }}"
-          SSH__HOST: "{{ prefect.blocks.secret.ssh-host }}"
-          SSH__PRIVATE_KEY: "{{ prefect.blocks.secret.ssh-private-key }}"
-          SOURCES__SQL_DATABASE__CREDENTIALS__USERNAME: "{{ prefect.blocks.secret.db-username }}"
-          SOURCES__SQL_DATABASE__CREDENTIALS__PASSWORD: "{{ prefect.blocks.secret.db-password }}"
-          DESTINATION__MOTHERDUCK__CREDENTIALS__PASSWORD: "{{ prefect.blocks.secret.md-credentials }}"
-          DESTINATION__MOTHERDUCK__CREDENTIALS__DATABASE: "custard"
-          DESTINATION__BIGQUERY__LOCATION: "EU"
+          DESTINATION__BIGQUERY__LOCATION: "europe-west10"
           DESTINATION__BIGQUERY__CREDENTIALS__PROJECT_ID: "{{ prefect.blocks.secret.bq-project-id }}"
           DESTINATION__BIGQUERY__CREDENTIALS__PRIVATE_KEY: "{{ prefect.blocks.secret.bq-private-key }}"
           DESTINATION__BIGQUERY__CREDENTIALS__CLIENT_EMAIL: "{{ prefect.blocks.secret.bq-client-email }}"

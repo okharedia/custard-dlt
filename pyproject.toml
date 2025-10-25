@@ -16,6 +16,7 @@ dependencies = [
     "prefect>=3.4.24",
     "prefect-gcp",
     "pandas>=2.3.3",
+    "sqlalchemy-bigquery>=1.15.0",
 ]
 
 [tool.setuptools]

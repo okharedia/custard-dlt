@@ -607,6 +607,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "recurring-ical-events" },
     { name = "sqlalchemy" },
+    { name = "sqlalchemy-bigquery" },
     { name = "sshtunnel" },
 ]
 
@@ -622,6 +623,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.12.3" },
     { name = "recurring-ical-events", specifier = ">=3.8.0" },
     { name = "sqlalchemy", specifier = ">=2.0.44" },
+    { name = "sqlalchemy-bigquery", specifier = ">=1.15.0" },
     { name = "sshtunnel", specifier = ">=0.4.0" },
 ]
 
@@ -3224,6 +3226,22 @@ wheels = [
 [package.optional-dependencies]
 asyncio = [
     { name = "greenlet" },
+]
+
+[[package]]
+name = "sqlalchemy-bigquery"
+version = "1.15.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core" },
+    { name = "google-auth" },
+    { name = "google-cloud-bigquery" },
+    { name = "packaging" },
+    { name = "sqlalchemy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e1/dc/3d97752601932f84ad832b92037d3aba7e2dd9a40ab5bec50588967f263c/sqlalchemy_bigquery-1.15.0.tar.gz", hash = "sha256:13bce11fc7af40705dd142fe0fa6f01126ff62ff26d5e514c858ec7351076764", size = 119559, upload-time = "2025-06-23T18:10:37.322Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/23/e3/2295c0dd2d9e90ea6d6a2211186328ada65980dae69cc76a0b62032fa309/sqlalchemy_bigquery-1.15.0-py3-none-any.whl", hash = "sha256:5066b6557c1fa7f67bb284897db56ba51e36543386ce95f0e92c7fde75bbbcf4", size = 40541, upload-time = "2025-06-23T18:10:36.131Z" },
 ]
 
 [[package]]
