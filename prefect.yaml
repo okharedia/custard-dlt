@@ -9,6 +9,11 @@ deployments:
       name: work-pool-1
       job_variables:
         env:
+          SOURCES__BIGQUERY__LOCATION: "europe-west10"
+          SOURCES__BIGQUERY__CREDENTIALS__PROJECT_ID: "{{ prefect.blocks.secret.bq-project-id }}"
+          SOURCES__BIGQUERY__CREDENTIALS__PRIVATE_KEY: "{{ prefect.blocks.secret.bq-private-key }}"
+          SOURCES__BIGQUERY__CREDENTIALS__CLIENT_EMAIL: "{{ prefect.blocks.secret.bq-client-email }}"
+          SOURCES__DATASET: "public"
           DESTINATION__BIGQUERY__LOCATION: "europe-west10"
           DESTINATION__BIGQUERY__CREDENTIALS__PROJECT_ID: "{{ prefect.blocks.secret.bq-project-id }}"
           DESTINATION__BIGQUERY__CREDENTIALS__PRIVATE_KEY: "{{ prefect.blocks.secret.bq-private-key }}"
