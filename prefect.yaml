@@ -13,6 +13,7 @@ deployments:
           DESTINATION__BIGQUERY__CREDENTIALS__PROJECT_ID: "{{ prefect.blocks.secret.bq-project-id }}"
           DESTINATION__BIGQUERY__CREDENTIALS__PRIVATE_KEY: "{{ prefect.blocks.secret.bq-private-key }}"
           DESTINATION__BIGQUERY__CREDENTIALS__CLIENT_EMAIL: "{{ prefect.blocks.secret.bq-client-email }}"
+          DESTINATION__DATASET: "public"
     schedule:
       cron: "0 5 * * *"
 
