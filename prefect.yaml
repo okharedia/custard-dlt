@@ -16,6 +16,10 @@ deployments:
           SOURCES__SQL_DATABASE__CREDENTIALS__PASSWORD: "{{ prefect.blocks.secret.db-password }}"
           DESTINATION__MOTHERDUCK__CREDENTIALS__PASSWORD: "{{ prefect.blocks.secret.md-credentials }}"
           DESTINATION__MOTHERDUCK__CREDENTIALS__DATABASE: "custard"
+          DESTINATION__BIGQUERY__LOCATION: "EU"
+          DESTINATION__BIGQUERY__CREDENTIALS__PROJECT_ID: "{{ prefect.blocks.secret.bq-project-id }}"
+          DESTINATION__BIGQUERY__CREDENTIALS__PRIVATE_KEY: "{{ prefect.blocks.secret.bq-private-key }}"
+          DESTINATION__BIGQUERY__CREDENTIALS__CLIENT_EMAIL: "{{ prefect.blocks.secret.bq-client-email }}"
     schedule:
       cron: "0 5 * * *"
 

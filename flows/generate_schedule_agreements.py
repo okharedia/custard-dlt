@@ -53,7 +53,7 @@ def run_dlt_pipeline(connection_string):
 
     pipeline = dlt.pipeline(
         pipeline_name="custard",
-        destination="motherduck",
+        destination="bigquery",
         dataset_name="main"
     )
     load_info = pipeline.run([agreements_resource])
