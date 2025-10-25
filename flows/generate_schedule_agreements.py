@@ -6,6 +6,7 @@ from typing import Optional
 from dlt.sources.sql_database import sql_database
 from prefect.cache_policies import INPUTS
 from prefect import flow, task, get_run_logger
+from google.oauth2 import service_account
 
 from get_events_between import get_events_between
 
@@ -47,12 +48,25 @@ def schedule_agreements(schedules_items):
 def run_dlt_pipeline(project_id: str, dataset: str):
     logger = get_run_logger()
 
+    # Create Google Cloud credentials from dlt secrets
+    credentials_info = {
+        "type": "service_account",
+        "project_id": project_id,
+        "private_key": dlt.secrets["destination.bigquery.credentials.private_key"],
+        "client_email": dlt.secrets["destination.bigquery.credentials.client_email"],
+        "token_uri": "https://oauth2.googleapis.com/token",
+    }
+    
+    credentials = service_account.Credentials.from_service_account_info(credentials_info)
+    
     # Create BigQuery connection string for sql_database source
     connection_string = f"bigquery://{project_id}/{dataset}"
     
+    # Pass credentials to sql_database source
     source = sql_database(
         connection_string,
-        schema=dataset
+        schema=dataset,
+        credentials=credentials
     ).with_resources("schedules")
     agreements_resource = schedule_agreements(source)
 
