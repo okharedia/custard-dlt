@@ -49,25 +49,12 @@ def generate_schedule_agreements(
 ):
     logger = get_run_logger()
     
-    project_id = dlt.secrets["destination.bigquery.credentials.project_id"]
-    dataset = dlt.config["destination.dataset"]
-
-    logger.info(f"Reading from BigQuery project: {project_id}, dataset: {dataset}")
-    
-    # Create BigQuery connection string for sql_database source
-    connection_string = f"bigquery://{project_id}/{dataset}"
-    
-    # Pass credentials to sql_database source
-    source = sql_database(
-        connection_string,
-        schema=dataset,
-    ).with_resources("schedules")
+    source = sql_database().with_resources("schedules")
     agreements_resource = schedule_agreements(source)
 
     pipeline = dlt.pipeline(
         pipeline_name="custard",
-        destination="bigquery",
-        dataset_name=dataset
+        destination="bigquery"
     )
     load_info = pipeline.run([agreements_resource])
 
